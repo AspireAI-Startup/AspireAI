@@ -44,3 +44,5 @@ const assessmentQuestionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+export const AssessmentQuestion = mongoose.model("AssessmentQuestion", assessmentQuestionSchema);
