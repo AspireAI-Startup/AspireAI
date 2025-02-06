@@ -1,0 +1,56 @@
+# Node modules and dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Temporary files
+tmp/
+dist/
+build/
+out/
+
+# IDE/editor-specific files
+.vscode/
+.idea/
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Debugging files
+*.swp
+*.swo
+*.bak
+
+# Misc
+.nyc_output/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache

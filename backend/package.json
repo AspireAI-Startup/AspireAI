@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AspireAI-Startup/AspireAI.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AspireAI-Startup/AspireAI/issues"
+  },
+  "homepage": "https://github.com/AspireAI-Startup/AspireAI#readme",
+  "description": ""
+}
