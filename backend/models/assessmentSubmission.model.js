@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const responseSchema = new Schema({
+const responseSchema = new mongoose.Schema({
   questionId: {
     type: Schema.Types.ObjectId,
     ref: "AssessmentQuestion",
@@ -13,7 +13,7 @@ const responseSchema = new Schema({
   },
 });
 
-const assessmentSubmissionSchema = new Schema(
+const assessmentSubmissionSchema = new mongoose.Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
