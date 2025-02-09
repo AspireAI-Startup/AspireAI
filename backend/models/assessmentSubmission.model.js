@@ -8,9 +8,8 @@ const responseSchema = new Schema({
   },
 
   answer: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: true,
-    trim: true,
   },
 });
 

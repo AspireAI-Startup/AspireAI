@@ -14,17 +14,29 @@ const assessmentQuestionSchema = new mongoose.Schema(
       required: true,
     },
 
+    academicLevel: {
+      type: String,
+      enum: ["class 10", "class 12"],
+      required: true,
+    },
+
     stream: {
       type: String,
       enum: ["Science", "Commerce", "Arts", "Common"],
       required: true,
     },
 
-    type: {
+    interest : {
       type: String,
-      enum: ["objective", "subjective"],
+      enum: ["Science", "Commerce", "Arts", "Common", "Any"],
       required: true,
     },
+
+    // type: {
+    //   type: String,
+    //   enum: ["objective", "subjective"],
+    //   required: true,
+    // },
 
     objectiveAnswers: {
       type: [optionSchema],
@@ -32,14 +44,6 @@ const assessmentQuestionSchema = new mongoose.Schema(
         return this.type === "objective";
       },
       default: [],
-    },
-
-    subjectiveAnswer: {
-      type: String,
-      trim: true,
-      required: function () {
-        return this.type === "subjective";
-      },
     },
   },
   { timestamps: true }

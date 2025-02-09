@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema(
       },
       lastName: {
         type: String,
-        required: true,
       },
     },
 
@@ -23,6 +22,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select : false
     },
 
     mobileNo: {
@@ -31,11 +31,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
-    academicLevel: {
-      type: String,
-      enum: ["class 10", "class 12"],
-      required: true,
-    },
+    
   },
   { timestamps: true }
 );
