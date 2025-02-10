@@ -1,7 +1,7 @@
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
 
-export const registerUser = async (req ,res) => {
+const registerUser = async (req ,res) => {
     try {
         const { firstName , lastName , email , password , mobileNo} = req.body;
 
@@ -31,7 +31,7 @@ export const registerUser = async (req ,res) => {
 
   //LOGIN
 
-  export const loginUser = async (req ,res ) => {
+const loginUser = async (req ,res ) => {
     try {
         const {email , password} = req.body;
 
@@ -46,10 +46,12 @@ export const registerUser = async (req ,res) => {
         }
         
     } catch (error) {
-        return res.status(404).json({message:"Error found"})
+        return res.status(404).json({message:"Error found"});
 
 }
   }
+
+export {registerUser,loginUser};
 
 
         
