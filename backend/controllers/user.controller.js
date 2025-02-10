@@ -1,6 +1,17 @@
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
 
+const genrateAccessTokenRefreshToken = async (userId) => {
+    const user = await User.findById(userId);
+    const accessToken = user.genrateAccessToken();
+    const refreshToken = user.genrateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+};
+
 const registerUser = async (req ,res) => {
     try {
         const { firstName , lastName , email , password , mobileNo} = req.body;
@@ -20,6 +31,13 @@ const registerUser = async (req ,res) => {
             mobileNo,
         });
 
+        const { accessToken, refreshToken } = await genrateAccessTokenRefreshToken(newUser._id);
+        
+        const options = {
+            httpOnly: true,
+            secure: true, 
+        }
+        res.cookie("refreshToken", refreshToken, options).cookie("accessToken", accessToken, options);
 
         return res.status(201).json({ message: "User registered successfully", user: newUser });
     } 
@@ -47,9 +65,8 @@ const loginUser = async (req ,res ) => {
         
     } catch (error) {
         return res.status(404).json({message:"Error found"});
-
+    }
 }
-  }
 
 export {registerUser,loginUser};
 
