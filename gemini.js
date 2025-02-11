@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import fs from "fs";
-import chalk from "chalk"; // ✅ Add colors for better readability
+import chalk from "chalk"; /
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
