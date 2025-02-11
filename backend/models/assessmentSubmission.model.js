@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const responseSchema = new mongoose.Schema({
   questionId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "AssessmentQuestion",
     required: true,
   },
@@ -16,7 +16,7 @@ const responseSchema = new mongoose.Schema({
 const assessmentSubmissionSchema = new mongoose.Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -26,10 +26,6 @@ const assessmentSubmissionSchema = new mongoose.Schema(
       required: true,
     },
 
-    submittedAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );

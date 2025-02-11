@@ -16,7 +16,7 @@ const assessmentQuestionSchema = new mongoose.Schema(
 
     academicLevel: {
       type: String,
-      enum: ["class 10", "class 12"],
+      enum: ["Class 10th", "Class 12th"],
       required: true,
     },
 
@@ -26,22 +26,19 @@ const assessmentQuestionSchema = new mongoose.Schema(
       required: true,
     },
 
-    interest : {
+    interest: {
       type: String,
-      enum: ["Science", "Commerce", "Arts", "Common", "Any"],
+      enum: ["Mathematics", "Commerce", "Arts", "Common", "Any"],
       required: true,
     },
 
-    // type: {
-    //   type: String,
-    //   enum: ["objective", "subjective"],
-    //   required: true,
-    // },
-
     objectiveAnswers: {
       type: [optionSchema],
-      required: function () {
-        return this.type === "objective";
+      validate: {
+        validator: function (v) {
+          return v.length > 0;
+        },
+        message: "At least one objective answer is required.",
       },
       default: [],
     },
