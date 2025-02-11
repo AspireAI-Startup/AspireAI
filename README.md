@@ -58,13 +58,9 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
    ```env
    PORT
    MONGO_URI
-   
    ACCESS_TOKEN_SECRET
-   
   ACCESS_TOKEN_EXPIRY
-  
   REFRESH_TOKEN_SECRET
-  
    REFRESH_TOKEN_EXPIRY 
    ```
 4. Run the application locally:
