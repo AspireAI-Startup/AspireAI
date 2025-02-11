@@ -117,7 +117,9 @@ const userLogout = async (req, res) => {
       .clearCookie("accessToken", accessToken, options);
 
     return res.status(201).json({ message: "Logout Successful" });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(404).json({ message: "Error in Logout" });
+  }
 };
 
 export { registerUser, loginUser, userLogout };
