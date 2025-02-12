@@ -15,14 +15,14 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
 
 ## Tech Stack
 
-### **Frontend:**(In progress)
+### **Frontend:**
 - React.js (Planned)
 - Tailwind CSS
 
-### **Backend:**(In progress)
+### **Backend:**
 - Node.js with Express.js
 - LangChain (For AI chatbot functionality)
-- Gemini LLM (Using Llama API key)
+- DeepSeek LLM (Using Llama API key)
 - AWS Lambda for serverless execution
 - Redis & Kafka for real-time processing
 
@@ -33,6 +33,7 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
 ### **Deployment & DevOps:**
 - Docker & Docker Compose
 - AWS (Lambda, IAM, Cloud, S3)
+- CI/CD Pipeline (Planned)
 
 ## Installation & Setup
 
@@ -44,34 +45,31 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
 ### Steps:
 1. Clone the repository:
    ```sh
-   git clone https://github.com/AspireAI-Startup/AspireAI.git
+   git clone https://github.com/yourusername/aspire-ai.git
    cd aspire-ai
    ```
 2. Install dependencies:
    ```sh
    yarn install  # Using Yarn as package manager
-   or 
-    npm install
    ```
 3. Set up environment variables:
    Create a `.env` file and add required API keys and configurations:
    ```env
-   PORT
-   MONGO_URI
-   ACCESS_TOKEN_SECRET
-  ACCESS_TOKEN_EXPIRY
-  REFRESH_TOKEN_SECRET
-   REFRESH_TOKEN_EXPIRY 
+   LLAMA_API_KEY=your_llama_api_key
+   MONGO_URI=your_mongo_connection_string
+   AWS_ACCESS_KEY=your_aws_access_key
+   AWS_SECRET_KEY=your_aws_secret_key
    ```
 4. Run the application locally:
    ```sh
    yarn dev
    ```
 
-## Docker Setup for AI model
+## Docker Setup
 To build and run the project using Docker:
 ```sh
-docker pull alphadevops1/my-ai-agent
+docker build -t aspire-ai .
+docker run -d -p 8080:8080 --name aspire-ai-container aspire-ai
 ```
 
 ## Contribution Guidelines
@@ -88,8 +86,9 @@ docker pull alphadevops1/my-ai-agent
 
 ## Contact & Support
 For any issues or feature requests, contact:
-- **Backend:** Krishnakant yadav ,Harshita Gupta,Aryan Kumar
-- **AI Model** Mohd Haseeb Ali, Shubham Maurya
+- **Backend:** Aryan Kumar,Harshita Gupta,Krishnakant Yadav
+- -**AI Model** Mohd Haseeb Ali, Shubham Kumar Maurya.
 - **Email:** [developerhaseeb1234@gmail.com](mailto:developerhaseeb1234@gmail.com)
+
 🚀 **Aspire AI – Your AI-powered career mentor!**
 
