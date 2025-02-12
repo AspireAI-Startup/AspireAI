@@ -1,5 +1,9 @@
 import { AssessmentQuestion } from "../models/assessmentQuestion.model.js";
 import { AssessmentSubmission } from "../models/assessmentSubmission.model.js";
+import AWS from "aws-sdk";
+
+AWS.config.update({ region: "ap-south-1" });
+const lambda = new AWS.Lambda();
 
 // Assesment Question Controller
 
@@ -43,7 +47,6 @@ const getQuestions = async (req, res) => {
 
 
 // Assesment Submission Controller
-
 const submitAssesment = async (req, res) => {
     try {
 
@@ -57,6 +60,14 @@ const submitAssesment = async (req, res) => {
             userId, responses
         });
         await newSubmission.save();
+
+        const lambdaParams = {
+            FunctionName: "career-counseling-app-dev-saveAssessment",
+            InvocationType: "Event",
+            Payload: JSON.stringify({ userId, responses }),
+        };
+
+        await lambda.invoke(lambdaParams).promise();
 
         return res.status(201).json({ message: "Assessment submitted successfully" });
 
