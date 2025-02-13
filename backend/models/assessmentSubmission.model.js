@@ -26,6 +26,13 @@ const assessmentSubmissionSchema = new mongoose.Schema(
       required: true,
     },
 
+    aiGeneratedResponses: [
+      {
+          questionId: { type: mongoose.Schema.Types.ObjectId, required: true },
+          aiResponse: { type: String, required: true },
+      }
+  ]
+  
   },
   { timestamps: true }
 );

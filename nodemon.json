@@ -1,0 +1,6 @@
+{
+    "watch": ["backend"], 
+    "ignore": ["memory.json"],
+    "ext": "js,json"
+  }
+  

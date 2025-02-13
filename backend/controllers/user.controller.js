@@ -30,6 +30,11 @@ const registerUser = async (req, res) => {
       mobileNo,
     });
 
+    if (!newUser) {
+      return res.status(400).json({ message: "user not created" });
+    }
+    delete newUser._doc.password
+
     const { accessToken, refreshToken } = await genrateAccessTokenRefreshToken(
       newUser._id
     );
@@ -44,7 +49,7 @@ const registerUser = async (req, res) => {
 
     return res
       .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+      .json({ message: "User registered successfully", user: newUser, accessToken, refreshToken });
   } catch (error) {
     return res.status(500).json({ message: "Error", error: error.message });
   }
@@ -69,6 +74,7 @@ const loginUser = async (req, res) => {
     const { accessToken, refreshToken } = await genrateAccessTokenRefreshToken(
       user._id
     );
+    delete user._doc.password
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -81,7 +87,7 @@ const loginUser = async (req, res) => {
     res
       .cookie("refreshToken", refreshToken, options)
       .cookie("accessToken", accessToken, options);
-    return res.status(201).json({ message: "User login successfully" });
+    return res.status(201).json({ message: "User login successfully", user, accessToken, refreshToken });
   } catch (error) {
     return res.status(404).json({ message: "Error found" });
   }
