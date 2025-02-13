@@ -1,8 +1,9 @@
 import { AssessmentQuestion } from "../models/assessmentQuestion.model.js";
 import { AssessmentSubmission } from "../models/assessmentSubmission.model.js";
-// import { aiResponse } from "../../gemini.js";
+import AWS from "aws-sdk";
 
-import { askAI } from "../Gemini.js";
+AWS.config.update({ region: "ap-south-1" });
+const lambda = new AWS.Lambda();
 
 // Assesment Question Controller
 
@@ -45,7 +46,7 @@ const getQuestions = async (req, res) => {
 }
 
 
-
+// Assesment Submission Controller
 const submitAssesment = async (req, res) => {
     try {
         const { userId, responses } = req.body;
@@ -96,10 +97,15 @@ const submitAssesment = async (req, res) => {
             responses,
             aiGeneratedResponses: validAiResponses,
         });
+        await newSubmission.save();
 
-        await submission.save();
+        const lambdaParams = {
+            FunctionName: "career-counseling-app-dev-saveAssessment",
+            InvocationType: "Event",
+            Payload: JSON.stringify({ userId, responses }),
+        };
 
-        console.log("🟢 Assessment saved successfully:", submission);
+        await lambda.invoke(lambdaParams).promise();
 
         return res.status(201).json({
             message: "Assessment submitted successfully",

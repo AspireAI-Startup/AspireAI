@@ -1,0 +1,35 @@
+service: career-counseling-app
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        - arn:aws:dynamodb:ap-south-1:253490793736:table/AssessmentSubmissions
+
+functions:
+  saveAssessment:
+    handler: handler.saveAssessment
+    events:
+      - http:
+          path: submit-assessment
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    AssessmentSubmissions:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AssessmentSubmissions
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
