@@ -1,58 +1,40 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import fs from "fs";
+import mongoose from "mongoose";
 import chalk from "chalk";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 import { Client as LangSmithClient } from "langsmith";
-
+import Chat from "./models/chatSchema.js";
 
 const langsmithClient = new LangSmithClient({
-    apiKey: process.env.LANGSMITH_API_KEY,
-    endpoint: process.env.LANGSMITH_ENDPOINT,
-    project: process.env.LANGSMITH_PROJECT,
+    apiKey: process.env.LANGSMITH_API_KEY || "",
+    endpoint: process.env.LANGSMITH_ENDPOINT || "",
+    project: process.env.LANGSMITH_PROJECT || "",
 });
-
 
 process.env.LANGCHAIN_TRACING = "true";
 
-const MEMORY_FILE = "memory.json";
-
-function loadMemory() {
-    try {
-        const data = fs.readFileSync(MEMORY_FILE, "utf8");
-        return JSON.parse(data);
-    } catch (error) {
-        return { history: [] };
-    }
-}
-
-function saveMemory(memory) {
-    fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2));
-}
-
 const llm = new ChatGoogleGenerativeAI({
     modelName: "gemini-2.0-flash",
-    apiKey: process.env.GEMINI_API_KEY,
-    langsmith: langsmithClient, 
+    apiKey: process.env.GEMINI_API_KEY || "",
+    langsmith: langsmithClient,
 });
 
 async function askAI(question, responses) {
-   
     const answers = Array.isArray(responses) ? responses.map(r => r.toString()) : [responses.toString()];
 
     console.log(chalk.blue.bold(`\n🟠 Sending to AI: Question: ${question}, Answers: ${answers.join(", ")}\n`));
 
-    const memory = loadMemory();
-    const pastConversations = memory.history
-        .map(entry => `User: ${entry.question}\nAI: ${entry.answer}`)
-        .join("\n");
-
     try {
+        
+        const pastConversations = await Chat.find().sort({ timestamp: 1 }).limit(10);
+        const pastConversationText = pastConversations.map(entry => `User: ${entry.question}\nAI: ${entry.response || entry.answer}`).join("\n");
+
         const response = await llm.invoke([
             new HumanMessage({
-                content: `${pastConversations}\n\nUser: Question: ${question}, Answers: ${answers.join(", ")}\n\nProvide career-related insights considering all answers together.`
+                content: `${pastConversationText}\n\nUser: Question: ${question}, Answers: ${answers.join(", ")}\n\nProvide career-related insights considering all answers together.`
             })
         ]);
 
@@ -63,8 +45,13 @@ async function askAI(question, responses) {
 
         const aiResponse = response.content.trim();
 
-        memory.history.push({ question, answer: answers.join(", "), aiResponse });
-        saveMemory(memory);
+        
+        const chatEntry = new Chat({
+            question,
+            answer: answers.join(", "),
+            response: aiResponse
+        });
+        await chatEntry.save();
 
         console.log(chalk.magenta.bold(`\n🟣 AI Response: ${aiResponse}\n`));
         return aiResponse;

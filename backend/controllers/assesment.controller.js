@@ -1,9 +1,12 @@
 import { AssessmentQuestion } from "../models/assessmentQuestion.model.js";
 import { AssessmentSubmission } from "../models/assessmentSubmission.model.js";
-import AWS from "aws-sdk";
+import { askAI } from '../Gemini.js'
 
-AWS.config.update({ region: "ap-south-1" });
-const lambda = new AWS.Lambda();
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+
+
+
+const lambda = new LambdaClient({ region: "ap-south-1" });
 
 // Assesment Question Controller
 
@@ -47,6 +50,21 @@ const getQuestions = async (req, res) => {
 
 
 // Assesment Submission Controller
+const processAIResponse = (text) => {
+    if (!text) return "";
+
+    // Limit response length (500 words max)
+    const maxWords = 500;
+    const words = text.split(" ");
+    if (words.length > maxWords) {
+        text = words.slice(0, maxWords).join(" ") + "...";
+    }
+
+    // Remove excessive repetitions
+    const uniqueSentences = new Set(text.split(". "));
+    return [...uniqueSentences].join(". ");
+};
+
 const submitAssesment = async (req, res) => {
     try {
         const { userId, responses } = req.body;
@@ -66,19 +84,22 @@ const submitAssesment = async (req, res) => {
             return res.status(400).json({ error: "Questions not found." });
         }
 
-        // **Using Promise.allSettled() to prevent crashes**
+        // **Using Promise.allSettled() to handle AI calls gracefully**
         const aiResponses = await Promise.allSettled(
             responses.map(async (response) => {
                 const question = questions.find(q => q._id.toString() === response.questionId);
-
                 if (!question) return null;
 
                 try {
-                    const aiResponse = await askAI(question.questionText, response.answer);
+                    console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answer: ${response.answer}`);
+                    let aiResponse = await askAI(question.questionText, response.answer);
 
-                    return aiResponse && aiResponse.trim() !== ""
-                        ? { questionId: question._id, aiResponse }
-                        : null;
+                    // Process AI response
+                    aiResponse = processAIResponse(aiResponse);
+
+                    console.log(`🟣 Processed AI Response: ${aiResponse}`);
+
+                    return aiResponse ? { questionId: question._id, aiResponse } : null;
                 } catch (err) {
                     console.error("❌ AI Error:", err.message);
                     return null;
@@ -86,30 +107,42 @@ const submitAssesment = async (req, res) => {
             })
         );
 
-        // Extract successful responses
+        // Extract successful AI responses
         const validAiResponses = aiResponses
             .filter(r => r.status === "fulfilled" && r.value !== null)
             .map(r => r.value);
 
-        // Save submission to MongoDB
-        const submission = new AssessmentSubmission({
-            userId,
-            responses,
-            aiGeneratedResponses: validAiResponses,
-        });
-        await newSubmission.save();
+        // Save submission to MongoDB with proper error handling
+        try {
+            const submission = new AssessmentSubmission({
+                userId,
+                responses,
+                aiGeneratedResponses: validAiResponses,
+            });
 
-        const lambdaParams = {
-            FunctionName: "career-counseling-app-dev-saveAssessment",
-            InvocationType: "Event",
-            Payload: JSON.stringify({ userId, responses }),
-        };
+            await submission.save();
+            console.log("✅ Successfully saved assessment to MongoDB.");
+        } catch (mongoError) {
+            console.error("❌ MongoDB Save Error:", mongoError);
+            return res.status(500).json({ error: "Failed to save assessment to MongoDB." });
+        }
 
-        await lambda.invoke(lambdaParams).promise();
+        // **AWS Lambda Invocation using SDK v3**
+        try {
+            const lambdaCommand = new InvokeCommand({
+                FunctionName: "career-counseling-app-dev-saveAssessment",
+                InvocationType: "Event",
+                Payload: JSON.stringify({ userId, responses }),
+            });
+
+            await lambda.send(lambdaCommand);
+            console.log("✅ Successfully invoked AWS Lambda.");
+        } catch (lambdaError) {
+            console.error("❌ Lambda Invocation Error:", lambdaError);
+        }
 
         return res.status(201).json({
             message: "Assessment submitted successfully",
-            submission,
         });
 
     } catch (error) {
@@ -117,6 +150,7 @@ const submitAssesment = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
 
 
 
