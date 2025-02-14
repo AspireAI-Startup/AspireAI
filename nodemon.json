@@ -1,5 +1,0 @@
-{
-  "watch": ["backend"],
-  "ignore": ["memory.json", "*.log", "data/*"],
-  "ext": "js"
-}
