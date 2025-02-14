@@ -22,9 +22,8 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
 ### **Backend:**
 - Node.js with Express.js
 - LangChain (For AI chatbot functionality)
-- DeepSeek LLM (Using Llama API key)
+- Gemini LLM (Using Gemini API key)
 - AWS Lambda for serverless execution
-- Redis & Kafka for real-time processing
 
 ### **Database:**
 - MongoDB (For storing user responses and analytics)
@@ -45,24 +44,24 @@ Aspire AI is an intelligent career consultation platform that leverages AI/ML an
 ### Steps:
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/aspire-ai.git
+   git clone https://github.com/AspireAI-Startup/AspireAI.git
    cd aspire-ai
    ```
 2. Install dependencies:
    ```sh
-   yarn install  # Using Yarn as package manager
+   npm install  # Using npm as package manager
    ```
 3. Set up environment variables:
    Create a `.env` file and add required API keys and configurations:
    ```env
-   LLAMA_API_KEY=your_llama_api_key
+   GEMINI=your_gemini_api_key
    MONGO_URI=your_mongo_connection_string
    AWS_ACCESS_KEY=your_aws_access_key
    AWS_SECRET_KEY=your_aws_secret_key
    ```
 4. Run the application locally:
    ```sh
-   yarn dev
+   npm run start 
    ```
 
 ## Docker Setup
