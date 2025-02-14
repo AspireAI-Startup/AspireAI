@@ -24,7 +24,20 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "@aws-sdk/client-dynamodb": "^3.744.0",
+    "@aws-sdk/client-lambda": "^3.744.0",
+    "@aws-sdk/client-s3": "^3.744.0",
+    "@langchain/core": "^0.3.39",
+    "@langchain/google-genai": "^0.1.8",
+    "@langchain/langgraph": "^0.2.45",
+    "@langchain/ollama": "^0.1.6",
+    "@langchain/openai": "^0.4.3",
+    "chalk": "^5.4.1",
+    "langchain": "^0.3.15",
+    "langsmith": "^0.3.7",
+    "serverless": "^4.6.2",
+    "zod": "^3.24.1"
   },
   "keywords": [],
   "description": ""
