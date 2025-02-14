@@ -49,11 +49,11 @@ const getQuestions = async (req, res) => {
 }
 
 
-// Assesment Submission Controller
+
 const processAIResponse = (text) => {
     if (!text) return "";
 
-    // Limit response length (500 words max)
+
     const maxWords = 500;
     const words = text.split(" ");
     if (words.length > maxWords) {
@@ -75,26 +75,36 @@ const submitAssesment = async (req, res) => {
             return res.status(400).json({ error: "Invalid request data." });
         }
 
-        // Fetch all related questions
+        
+        const groupedResponses = responses.reduce((acc, response) => {
+            if (!acc[response.questionId]) {
+                acc[response.questionId] = [];
+            }
+            acc[response.questionId].push(response.answer);
+            return acc;
+        }, {});
+
+        
+        const questionIds = Object.keys(groupedResponses);
         const questions = await AssessmentQuestion.find({
-            _id: { $in: responses.map(r => r.questionId) }
+            _id: { $in: questionIds }
         });
 
         if (!questions.length) {
             return res.status(400).json({ error: "Questions not found." });
         }
 
-        // **Using Promise.allSettled() to handle AI calls gracefully**
+       
         const aiResponses = await Promise.allSettled(
-            responses.map(async (response) => {
-                const question = questions.find(q => q._id.toString() === response.questionId);
-                if (!question) return null;
+            questions.map(async (question) => {
+                const answers = groupedResponses[question._id.toString()];
+                if (!answers || !answers.length) return null;
 
                 try {
-                    console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answer: ${response.answer}`);
-                    let aiResponse = await askAI(question.questionText, response.answer);
+                    console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answers: ${answers.join(", ")}`);
+                    let aiResponse = await askAI(question.questionText, answers);
 
-                    // Process AI response
+                    
                     aiResponse = processAIResponse(aiResponse);
 
                     console.log(`🟣 Processed AI Response: ${aiResponse}`);
@@ -107,16 +117,19 @@ const submitAssesment = async (req, res) => {
             })
         );
 
-        // Extract successful AI responses
+        
         const validAiResponses = aiResponses
             .filter(r => r.status === "fulfilled" && r.value !== null)
             .map(r => r.value);
 
-        // Save submission to MongoDB with proper error handling
+        
         try {
             const submission = new AssessmentSubmission({
                 userId,
-                responses,
+                responses: validAiResponses.map(r => ({
+                    questionId: r.questionId,
+                    answer: r.aiResponse,
+                })),
                 aiGeneratedResponses: validAiResponses,
             });
 
@@ -127,12 +140,12 @@ const submitAssesment = async (req, res) => {
             return res.status(500).json({ error: "Failed to save assessment to MongoDB." });
         }
 
-        // **AWS Lambda Invocation using SDK v3**
+        
         try {
             const lambdaCommand = new InvokeCommand({
                 FunctionName: "career-counseling-app-dev-saveAssessment",
                 InvocationType: "Event",
-                Payload: JSON.stringify({ userId, responses }),
+                Payload: JSON.stringify({ userId, responses: validAiResponses }),
             });
 
             await lambda.send(lambdaCommand);
@@ -150,9 +163,6 @@ const submitAssesment = async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
-
-
-
 
 
 
