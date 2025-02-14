@@ -60,7 +60,6 @@ const processAIResponse = (text) => {
         text = words.slice(0, maxWords).join(" ") + "...";
     }
 
-    // Remove excessive repetitions
     const uniqueSentences = new Set(text.split(". "));
     return [...uniqueSentences].join(". ");
 };

@@ -20,6 +20,7 @@ const llm = new ChatGoogleGenerativeAI({
     modelName: "gemini-2.0-flash",
     apiKey: process.env.GEMINI_API_KEY || "",
     langsmith: langsmithClient,
+    temperature: 0.5
 });
 
 async function askAI(question, responses) {
@@ -28,7 +29,7 @@ async function askAI(question, responses) {
     console.log(chalk.blue.bold(`\n🟠 Sending to AI: Question: ${question}, Answers: ${answers.join(", ")}\n`));
 
     try {
-        
+
         const pastConversations = await Chat.find().sort({ timestamp: 1 }).limit(10);
         const pastConversationText = pastConversations.map(entry => `User: ${entry.question}\nAI: ${entry.response || entry.answer}`).join("\n");
 
@@ -45,7 +46,7 @@ async function askAI(question, responses) {
 
         const aiResponse = response.content.trim();
 
-        
+
         const chatEntry = new Chat({
             question,
             answer: answers.join(", "),
