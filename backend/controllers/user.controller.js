@@ -114,6 +114,36 @@ const getUserProfile = async (req, res) => {
 //Forget Password
 
 
+const forgetPassword = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    
+    const {oldPassword, newPassword} = req.body;
+    
+
+    const user = await User.findById(userId).select("+password");
+    if (!user){
+      return res.status(404).json({message:"user not found"});
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({ message: "Password changed successfully" }); 
+
+  } catch (error) {
+    return res.status(404).json({message:"server error", error:error.message});
+
+  }
+}
+
+
 
 
 
@@ -152,4 +182,4 @@ const userLogout = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getUserProfile, userLogout };
+export { registerUser, loginUser, getUserProfile, forgetPassword, userLogout };
