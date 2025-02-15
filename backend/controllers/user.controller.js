@@ -93,6 +93,28 @@ const loginUser = async (req, res) => {
   }
 };
 
+//Get User Profile
+
+const getUserProfile = async (req, res) => {
+  try {
+    const userId= req.user._id
+    
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({message: "User not found" });
+    }
+
+    return res.status(200).json({message:"user profile", user});
+  }catch (error) {
+    return res.status(404).json({message: "Server Error", error: error.message });
+  }
+};
+
+
+//Forget Password
+
+
+
 //LOGOUT
 
 const userLogout = async (req, res) => {
@@ -128,4 +150,4 @@ const userLogout = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, userLogout };
+export { registerUser, loginUser, getUserProfile, userLogout };
