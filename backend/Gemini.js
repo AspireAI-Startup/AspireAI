@@ -26,7 +26,7 @@ const llm = new ChatGoogleGenerativeAI({
 async function askAI(question, responses) {
     const answers = Array.isArray(responses) ? responses.map(r => r.toString()) : [responses.toString()];
 
-    console.log(chalk.blue.bold(`\n🟠 Sending to AI: Question: ${question}, Answers: ${answers.join(", ")}\n`));
+    // console.log(chalk.blue.bold(`\n🟠 Sending to AI: Question: ${question}, Answers: ${answers.join(", ")}\n`));
 
     try {
 
@@ -54,7 +54,7 @@ async function askAI(question, responses) {
         });
         await chatEntry.save();
 
-        console.log(chalk.magenta.bold(`\n🟣 AI Response: ${aiResponse}\n`));
+        // console.log(chalk.magenta.bold(`\n🟣 AI Response: ${aiResponse}\n`));
         return aiResponse;
 
     } catch (error) {

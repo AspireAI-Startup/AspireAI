@@ -3,6 +3,8 @@ import { AssessmentSubmission } from "../models/assessmentSubmission.model.js";
 import { askAI } from '../Gemini.js'
 
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import redisClient from "../db/redis.js";
+import { getSentenceEmbeddings } from "../utils/sentenceencoder.js";
 
 
 
@@ -68,13 +70,13 @@ const submitAssesment = async (req, res) => {
     try {
         const { userId, responses } = req.body;
 
-        console.log("🟢 Received Assessment Submission:", req.body);
+        // console.log("🟢 Received Assessment Submission:", req.body);
 
         if (!userId || !responses || !Array.isArray(responses)) {
             return res.status(400).json({ error: "Invalid request data." });
         }
 
-        
+
         const groupedResponses = responses.reduce((acc, response) => {
             if (!acc[response.questionId]) {
                 acc[response.questionId] = [];
@@ -83,7 +85,7 @@ const submitAssesment = async (req, res) => {
             return acc;
         }, {});
 
-        
+
         const questionIds = Object.keys(groupedResponses);
         const questions = await AssessmentQuestion.find({
             _id: { $in: questionIds }
@@ -93,20 +95,20 @@ const submitAssesment = async (req, res) => {
             return res.status(400).json({ error: "Questions not found." });
         }
 
-       
+
         const aiResponses = await Promise.allSettled(
             questions.map(async (question) => {
                 const answers = groupedResponses[question._id.toString()];
                 if (!answers || !answers.length) return null;
 
                 try {
-                    console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answers: ${answers.join(", ")}`);
+                    // console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answers: ${answers.join(", ")}`);
                     let aiResponse = await askAI(question.questionText, answers);
 
-                    
+
                     aiResponse = processAIResponse(aiResponse);
 
-                    console.log(`🟣 Processed AI Response: ${aiResponse}`);
+                    // console.log(`🟣 Processed AI Response: ${aiResponse}`);
 
                     return aiResponse ? { questionId: question._id, aiResponse } : null;
                 } catch (err) {
@@ -116,12 +118,39 @@ const submitAssesment = async (req, res) => {
             })
         );
 
-        
+
         const validAiResponses = aiResponses
             .filter(r => r.status === "fulfilled" && r.value !== null)
             .map(r => r.value);
 
-        
+        const sentencesForVectorization = validAiResponses.map(r => {
+            return `${r.question} ${r.aiResponse}`;
+        });
+
+        const vectorSentences = await getSentenceEmbeddings(sentencesForVectorization);
+
+        if (vectorSentences && vectorSentences.length > 0) {
+            const redisData = {
+                userId,
+                vectorSentences: Array.isArray(vectorSentences)
+                    ? vectorSentences
+                    : Object.values(vectorSentences) 
+            };
+
+            await redisClient.lpush("aiGeneratedResponses", JSON.stringify(redisData));
+            await redisClient.expire("aiGeneratedResponses", 21600);
+            console.log("✅ Successfully stored vectorized responses in Redis.");
+        } else {
+            console.error("❌ Vectorization failed or returned empty data. Not storing in Redis.");
+        }
+
+
+        await redisClient.lpush("aiGeneratedResponses", JSON.stringify(vectorSentences));
+
+        await redisClient.expire("aiGeneratedResponses", 21600);
+
+        console.log("✅ Successfully saved assessment to Redis.");
+
         try {
             const submission = new AssessmentSubmission({
                 userId,
@@ -139,7 +168,7 @@ const submitAssesment = async (req, res) => {
             return res.status(500).json({ error: "Failed to save assessment to MongoDB." });
         }
 
-        
+
         try {
             const lambdaCommand = new InvokeCommand({
                 FunctionName: "career-counseling-app-dev-saveAssessment",
@@ -154,7 +183,7 @@ const submitAssesment = async (req, res) => {
         }
 
         return res.status(201).json({
-            message: "Assessment submitted successfully",
+            message: "Assessment submitted successfully"
         });
 
     } catch (error) {
