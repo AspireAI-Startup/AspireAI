@@ -4,7 +4,7 @@ import connectDb from "./db/db.js";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.routes.js";
 import assesmentRouter from "./routes/assesment.route.js";
-import redisClient from "./db/redis.js";
+import cors from 'cors'
 
 dotenv.config();
 
@@ -14,6 +14,7 @@ const port = process.env.PORT || 4000;
 connectDb()
 
 app.use(express.json())
+app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
