@@ -23,14 +23,11 @@ const llm = new ChatGoogleGenerativeAI({
     temperature: 0.5
 });
 
-async function askAI(question, responses) {
+async function askAI(question, responses, userId) { // Add userId as a parameter
     const answers = Array.isArray(responses) ? responses.map(r => r.toString()) : [responses.toString()];
 
-    // console.log(chalk.blue.bold(`\n🟠 Sending to AI: Question: ${question}, Answers: ${answers.join(", ")}\n`));
-
     try {
-
-        const pastConversations = await Chat.find().sort({ timestamp: 1 }).limit(10);
+        const pastConversations = await Chat.find({ userId }).sort({ timestamp: 1 }).limit(10);
         const pastConversationText = pastConversations.map(entry => `User: ${entry.question}\nAI: ${entry.response || entry.answer}`).join("\n");
 
         const response = await llm.invoke([
@@ -46,17 +43,15 @@ async function askAI(question, responses) {
 
         const aiResponse = response.content.trim();
 
-
         const chatEntry = new Chat({
+            userId, // Include userId in the chat entry
             question,
             answer: answers.join(", "),
             response: aiResponse
         });
         await chatEntry.save();
 
-        // console.log(chalk.magenta.bold(`\n🟣 AI Response: ${aiResponse}\n`));
         return aiResponse;
-
     } catch (error) {
         console.error("❌ AI Error:", error.message);
         return "Error generating AI response.";
@@ -64,3 +59,5 @@ async function askAI(question, responses) {
 }
 
 export { askAI };
+
+
