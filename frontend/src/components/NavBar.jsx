@@ -3,11 +3,7 @@ import { UserDataContext } from "../context/UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-<<<<<<< HEAD
 const NavBar = () => {
-   
-=======
-const Navbar = () => {
   const { isLoggedIn, setIsLoggedIn } = useContext(UserDataContext);
   const navigate = useNavigate();
 
@@ -35,7 +31,6 @@ const Navbar = () => {
     }
   };
 
->>>>>>> 7a3ac8b676efa00123be78513d77e6c57b1bd534
   return (
     <nav className="bg-blue-600 shadow-md">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
