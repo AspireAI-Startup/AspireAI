@@ -62,6 +62,7 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");
+    
     if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
@@ -97,16 +98,16 @@ const loginUser = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
-    const userId= req.user._id
+    const userId = req.user._id
 
     const user = await User.findById(userId).select("-password");
     if (!user) {
-      return res.status(404).json({message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({message:"user profile", user});
-  }catch (error) {
-    return res.status(404).json({message: "Server Error", error: error.message });
+    return res.status(200).json({ message: "user profile", user });
+  } catch (error) {
+    return res.status(404).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -117,13 +118,13 @@ const getUserProfile = async (req, res) => {
 const forgetPassword = async (req, res) => {
   try {
     const userId = req.user?._id;
-    
-    const {oldPassword, newPassword} = req.body;
-    
+
+    const { oldPassword, newPassword } = req.body;
+
 
     const user = await User.findById(userId).select("+password");
-    if (!user){
-      return res.status(404).json({message:"user not found"});
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
@@ -135,10 +136,10 @@ const forgetPassword = async (req, res) => {
     user.password = hashedNewPassword;
     await user.save({ validateBeforeSave: false });
 
-    return res.status(200).json({ message: "Password changed successfully" }); 
+    return res.status(200).json({ message: "Password changed successfully" });
 
   } catch (error) {
-    return res.status(404).json({message:"server error", error:error.message});
+    return res.status(404).json({ message: "server error", error: error.message });
 
   }
 }
