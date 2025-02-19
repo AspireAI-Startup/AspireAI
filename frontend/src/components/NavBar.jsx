@@ -3,7 +3,7 @@ import { UserDataContext } from "../context/UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Navbar = () => {
+const NavBar = () => {
   const { isLoggedIn, setIsLoggedIn } = useContext(UserDataContext);
   const navigate = useNavigate();
 
@@ -69,4 +69,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavBar;
