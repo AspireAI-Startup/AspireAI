@@ -5,7 +5,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { UpdateCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import redisClient from "../db/redis.js";
-import { getSentenceEmbeddings } from "../utils/sentenceencoder.js";
+
 
 const REGION = "ap-south-1";
 const TABLE_NAME = "AssessmentSubmissions";
@@ -115,6 +115,24 @@ const submitAssesment = async (req, res) => {
             .filter(r => r.status === "fulfilled" && r.value !== null)
             .map(r => r.value);
 
+        const existindData = await redisClient.lrange("aiGeneratedResponses", 0, -1);
+        const previousData = existindData.length > 0 ? existindData : [];
+
+
+        const newResponses = validAiResponses.map(r => ({
+            questionId: r.questionId.toString(),
+            questionText: questions.find(q => q._id.toString() === r.questionId)?.questionText || "Unknown",
+            aiResponse: r.aiResponse
+        }));
+
+
+        const updatedResponses = [...previousData, ...newResponses];
+        await redisClient.lpush("aiGeneratedResponses", ...updatedResponses.map(response => JSON.stringify(response)));
+        await redisClient.expire("aiGeneratedRespons", 21600);
+
+        console.log("✅ Successfully appended new responses in Redis.");
+
+
         const params = {
             TableName: TABLE_NAME,
             Key: { userId },
@@ -125,7 +143,7 @@ const submitAssesment = async (req, res) => {
                     answer: r.aiResponse
                 })),
                 ":newAiResponses": validAiResponses.map(r => ({
-                    questionId: r.questionId.toString(), 
+                    questionId: r.questionId.toString(),
                     aiResponse: r.aiResponse
                 })),
                 ":emptyList": []
