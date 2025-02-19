@@ -1,11 +1,17 @@
 import { AssessmentQuestion } from "../models/assessmentQuestion.model.js";
 import { AssessmentSubmission } from "../models/assessmentSubmission.model.js";
 import { askAI } from '../Gemini.js'
-
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { UpdateCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import redisClient from "../db/redis.js";
 import { getSentenceEmbeddings } from "../utils/sentenceencoder.js";
 
+const REGION = "ap-south-1";
+const TABLE_NAME = "AssessmentSubmissions";
+
+const dynamoDBClient = new DynamoDBClient({ region: REGION });
+const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
 
 
 const lambda = new LambdaClient({ region: "ap-south-1" });
@@ -70,12 +76,9 @@ const submitAssesment = async (req, res) => {
     try {
         const { userId, responses } = req.body;
 
-        // console.log("🟢 Received Assessment Submission:", req.body);
-
         if (!userId || !responses || !Array.isArray(responses)) {
             return res.status(400).json({ error: "Invalid request data." });
         }
-
 
         const groupedResponses = responses.reduce((acc, response) => {
             if (!acc[response.questionId]) {
@@ -85,16 +88,12 @@ const submitAssesment = async (req, res) => {
             return acc;
         }, {});
 
-
         const questionIds = Object.keys(groupedResponses);
-        const questions = await AssessmentQuestion.find({
-            _id: { $in: questionIds }
-        });
+        const questions = await AssessmentQuestion.find({ _id: { $in: questionIds } });
 
         if (!questions.length) {
             return res.status(400).json({ error: "Questions not found." });
         }
-
 
         const aiResponses = await Promise.allSettled(
             questions.map(async (question) => {
@@ -102,89 +101,42 @@ const submitAssesment = async (req, res) => {
                 if (!answers || !answers.length) return null;
 
                 try {
-                    // console.log(`🟠 Sending to AI: Question: ${question.questionText}, Answers: ${answers.join(", ")}`);
                     let aiResponse = await askAI(question.questionText, answers);
-
-
                     aiResponse = processAIResponse(aiResponse);
-
-                    // console.log(`🟣 Processed AI Response: ${aiResponse}`);
-
-                    return aiResponse ? { questionId: question._id, aiResponse } : null;
+                    return aiResponse ? { questionId: question._id.toString(), aiResponse } : null;
                 } catch (err) {
-                    console.error("❌ AI Error:", err.message);
+                    console.error("AI Error:", err.message);
                     return null;
                 }
             })
         );
 
-
         const validAiResponses = aiResponses
             .filter(r => r.status === "fulfilled" && r.value !== null)
             .map(r => r.value);
 
-        const sentencesForVectorization = validAiResponses.map(r => {
-            return `${r.question} ${r.aiResponse}`;
-        });
-
-        const vectorSentences = await getSentenceEmbeddings(sentencesForVectorization);
-
-        if (vectorSentences && vectorSentences.length > 0) {
-            const redisData = {
-                userId,
-                vectorSentences: Array.isArray(vectorSentences)
-                    ? vectorSentences
-                    : Object.values(vectorSentences) 
-            };
-
-            await redisClient.lpush("aiGeneratedResponses", JSON.stringify(redisData));
-            await redisClient.expire("aiGeneratedResponses", 21600);
-            console.log("✅ Successfully stored vectorized responses in Redis.");
-        } else {
-            console.error("❌ Vectorization failed or returned empty data. Not storing in Redis.");
-        }
-
-
-        await redisClient.lpush("aiGeneratedResponses", JSON.stringify(vectorSentences));
-
-        await redisClient.expire("aiGeneratedResponses", 21600);
-
-        console.log("✅ Successfully saved assessment to Redis.");
-
-        try {
-            const submission = new AssessmentSubmission({
-                userId,
-                responses: validAiResponses.map(r => ({
-                    questionId: r.questionId,
-                    answer: r.aiResponse,
+        const params = {
+            TableName: TABLE_NAME,
+            Key: { userId },
+            UpdateExpression: "SET responses = list_append(if_not_exists(responses, :emptyList), :newResponses), aiGeneratedResponses = list_append(if_not_exists(aiGeneratedResponses, :emptyList), :newAiResponses)",
+            ExpressionAttributeValues: {
+                ":newResponses": validAiResponses.map(r => ({
+                    questionId: r.questionId.toString(),
+                    answer: r.aiResponse
                 })),
-                aiGeneratedResponses: validAiResponses,
-            });
+                ":newAiResponses": validAiResponses.map(r => ({
+                    questionId: r.questionId.toString(), 
+                    aiResponse: r.aiResponse
+                })),
+                ":emptyList": []
+            },
+            ReturnValues: "UPDATED_NEW"
+        };
 
-            await submission.save();
-            console.log("✅ Successfully saved assessment to MongoDB.");
-        } catch (mongoError) {
-            console.error("❌ MongoDB Save Error:", mongoError);
-            return res.status(500).json({ error: "Failed to save assessment to MongoDB." });
-        }
+        await dynamoDB.send(new UpdateCommand(params));
+        console.log("✅ Successfully updated assessment in DynamoDB.");
 
-
-        try {
-            const lambdaCommand = new InvokeCommand({
-                FunctionName: "career-counseling-app-dev-saveAssessment",
-                InvocationType: "Event",
-                Payload: JSON.stringify({ userId, responses: validAiResponses }),
-            });
-
-            await lambda.send(lambdaCommand);
-            console.log("✅ Successfully invoked AWS Lambda.");
-        } catch (lambdaError) {
-            console.error("❌ Lambda Invocation Error:", lambdaError);
-        }
-
-        return res.status(201).json({
-            message: "Assessment submitted successfully"
-        });
+        return res.status(201).json({ message: "Assessment submitted successfully" });
 
     } catch (error) {
         console.error("❌ Error submitting assessment:", error);

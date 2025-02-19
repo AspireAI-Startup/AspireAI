@@ -9,13 +9,13 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { setUser ,setIsLoggedIn} = useContext(UserDataContext);
+  const { setUser, setIsLoggedIn } = useContext(UserDataContext);
   const navigate = useNavigate();
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
-   
+
     if (!email || !password) {
       alert("Email and password are required!");
       return;
@@ -27,7 +27,7 @@ const Login = () => {
     };
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/login`, userCredentials,{
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/login`, userCredentials, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -87,7 +87,7 @@ const Login = () => {
 
         {/* Register Link */}
         <p className="text-sm text-gray-600 text-center mt-4">
-          Don&apos;t have an account? 
+          Don&apos;t have an account?
           <a href="/register" className="text-blue-500 hover:underline">Register</a>
         </p>
 

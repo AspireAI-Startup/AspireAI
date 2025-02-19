@@ -20,15 +20,15 @@ const Register = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-   
+
     if (!firstName || !lastName || !email || !password || !mobileNo) {
       alert("All fields are required!");
       return;
     }
 
     const newUser = {
-        firstName: firstName,
-        lastName: lastName,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       password: password,
       mobileNo: mobileNo,

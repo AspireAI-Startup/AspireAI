@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-import chalk from "chalk";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 import { Client as LangSmithClient } from "langsmith";
@@ -23,7 +22,7 @@ const llm = new ChatGoogleGenerativeAI({
     temperature: 0.5
 });
 
-async function askAI(question, responses, userId) { // Add userId as a parameter
+async function askAI(question, responses, userId) { 
     const answers = Array.isArray(responses) ? responses.map(r => r.toString()) : [responses.toString()];
 
     try {
@@ -44,7 +43,7 @@ async function askAI(question, responses, userId) { // Add userId as a parameter
         const aiResponse = response.content.trim();
 
         const chatEntry = new Chat({
-            userId, // Include userId in the chat entry
+            userId, 
             question,
             answer: answers.join(", "),
             response: aiResponse

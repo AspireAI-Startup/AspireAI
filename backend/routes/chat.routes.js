@@ -5,6 +5,6 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router()
 
 
-router.get('/getChatHistory/:userId',verifyJWT,getChatByUser)
+router.get('/getChatHistory/:userId', verifyJWT, getChatByUser)
 
 export default router;
